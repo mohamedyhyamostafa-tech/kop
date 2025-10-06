@@ -1,0 +1,112 @@
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>⚔️ Alzaeem Tech ⚔️</title>  
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/4712/4712108.png">  
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">  
+<style>  
+  body { margin:0; font-family:"Segoe UI",sans-serif; background:linear-gradient(135deg,#0d0d0d,#1a1a1a,#262626); color:white; overflow-x:hidden; }  
+  header { text-align:center; padding:20px; font-size:40px; font-weight:bold; color:gold; text-shadow:0 0 15px #ff0,0 0 25px #f80; animation:glow 3s infinite alternate; }  
+  @keyframes glow { from{ text-shadow:0 0 10px #f80;} to{ text-shadow:0 0 30px #ff0;} }  
+  .sidebar { position: fixed; top:-100%; left:0; width:100%; height:320px; background:rgba(0,0,0,0.95); padding:20px; box-shadow:0 3px 15px #000; transition: top 0.5s ease; z-index:1001; display:flex; flex-direction:column; justify-content:space-between; }  
+  .sidebar.active{ top:0; }  
+  .search-box{ text-align:center; margin-bottom:20px; }  
+  .search-box input{ width:70%; padding:8px; border:none; border-radius:6px; outline:none; font-size:14px; }  
+  .search-box button{ padding:8px 10px; border:none; border-radius:6px; background:gold; cursor:pointer; font-weight:bold; }  
+  .search-box button:hover{ background:orange; }  
+  .links{ flex:1; overflow-y:auto; }  
+  .links a{ display:block; padding:12px; margin:8px 0; background:#111; color:#fff; text-decoration:none; border-radius:8px; text-align:center; transition:0.3s; font-weight:bold; }  
+  .links a:hover{ background:gold; color:black; }  
+  .footer{ text-align:center; font-size:12px; color:#bbb; margin-top:10px; }  
+  .toggle-btn{ position:fixed; top:20px; right:20px; background:gold; color:black; border:none; padding:10px 15px; cursor:pointer; border-radius:8px; font-weight:bold; z-index:1002; transition:0.3s; }  
+  .toggle-btn:hover{ background:orange; }  
+  .content{ margin:40px; text-align:center; position:relative; z-index:1; }  
+  .welcome{ font-size:28px; font-weight:bold; animation:colors 3s infinite alternate; }  
+  @keyframes colors{ 0%{color:gold;} 50%{color:#0ff;} 100%{color:#f0f;} }  
+  .message{ margin-top:15px; font-size:22px; animation:fade 4s infinite; font-weight:bold; }  
+  @keyframes fade{ 0%,100%{opacity:0;} 50%{opacity:1;} }  
+  .logo{ margin-top:20px; }  
+  .logo img{ width:280px; border-radius:20px; box-shadow:0 0 30px gold; max-width:90%; }  
+  .cloud{ position:absolute; left:-200px; background:rgba(255,255,255,0.08); padding:20px 40px; border-radius:50px; font-size:18px; font-weight:bold; animation:floatClouds 25s linear infinite; color:cyan; text-shadow:0 0 8px #0ff; white-space:nowrap; }  
+  @keyframes floatClouds{ 0%{transform:translateX(0);opacity:0;} 20%{opacity:1;} 80%{opacity:1;} 100%{transform:translateX(120vw);opacity:0;} }  
+  .bottom-bar{ background:#111; padding:15px; text-align:center; font-size:14px; margin-top:40px; border-top:2px solid gold; }  
+  .bottom-bar i{ margin:0 8px; color:gold; font-size:18px; }  
+  .voice-btn{ position:fixed; bottom:25px; right:25px; padding:12px 18px; background:cyan; color:black; font-weight:bold; border:none; border-radius:10px; cursor:pointer; z-index:1003; box-shadow:0 0 15px cyan; transition:0.3s; }  
+  .voice-btn:hover{ background:#0ff; box-shadow:0 0 25px cyan; }  
+</style>  
+</head>  
+<body>  <button class="toggle-btn" onclick="toggleSidebar()">☰ Menu</button>
+
+<header>⚔️ 𝒜𝓁𝓏𝒶𝒾𝓂 𝒯𝑒𝒸𝒽 ⚔️ <i class="fa-solid fa-brain" style="color:#0ff;"></i></header>  <div class="sidebar" id="sidebar">  
+  <div>  
+    <div class="search-box">  
+      <input type="text" id="searchInput" placeholder="Search page...">  
+      <button onclick="searchPage()">Search</button>  
+    </div>  
+    <div class="links">  
+      <a href="https://alzaeem1.gt.tc/Main"><i class="fa-solid fa-house"></i> Home</a>  
+      <a href="https://alzaeem1.gt.tc/rule%20unive"><i class="fa-solid fa-circle-info"></i> University of Computers and Information</a>  
+      <a href="https://alzaeem1.gt.tc/rule%20stud"><i class="fa-solid fa-gear"></i> Student values</a>  
+      <a href="https://alzaeem1.gt.tc/rule%20doct"><i class="fa-solid fa-briefcase"></i> Teacher values</a>  
+      <a href="https://alzaeem1.gt.tc/student"><i class="fa-solid fa-brain"></i> Student page</a>  
+      <a href="https://alzaeem1.gt.tc/Main"><i class="fa-solid fa-code"></i> Registration page</a>  
+      <a href="https://alzaeem1.gt.tc/file"><i class="fa-solid fa-shield-halved"></i> Student files</a>  
+      <a href="https://alzaeem1.gt.tc/search1_hub"><i class="fa-solid fa-users"></i> Google and Microsoft services</a>  
+      <a href="https://alzaeem1.gt.tc/search_hub"><i class="fa-solid fa-headset"></i> Software definitions</a>  
+      <a href="https://mail.google.com/mail/?view=cm&fs=1&to=mohamedyhyamostafa@gmail.com"><i class="fa-solid fa-envelope"></i> Email for correspondence and inquiries</a>  
+    </div>  
+  </div>  
+  <div class="footer">  
+    ⚔️ © 2025 Alza3im Tech ⚔️<br> All Rights Reserved  
+  </div>  
+</div>  <div class="content">  
+  <div class="welcome">✨ Power • Intelligence • Future ✨</div>  
+  <div class="message">⚔️ Where AI Meets Warriors of Technology ⚔️</div>  
+  <div class="logo">  
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyKVX7d7hDJYenWDygmHG-h239wLLUlIPmFWwlSiF4mA&s=10" alt="Wild Horse Logo">  
+    <p style="margin-top:10px;">The Untamed Stallion of Sharqia 🐎</p>  
+  </div>  
+</div>  <div class="cloud" style="top:25%;animation-delay:0s;">🤖 Artificial Intelligence</div>  
+<div class="cloud" style="top:35%;animation-delay:5s;">⚡ Neural Networks</div>  
+<div class="cloud" style="top:45%;animation-delay:10s;">📊 Data Science</div>  
+<div class="cloud" style="top:55%;animation-delay:15s;">🗡️ Cyber Defense</div>  
+<div class="cloud" style="top:65%;animation-delay:20s;">🚀 Robotics & Automation</div>  
+<div class="cloud" style="top:75%;animation-delay:25s;">🌐 Future Networks</div>  <div class="bottom-bar">  
+  <i class="fa-solid fa-star"></i>  
+  <i class="fa-solid fa-gem"></i>  
+  <i class="fa-solid fa-dragon"></i>  
+  <i class="fa-solid fa-chess-knight"></i>  
+  <i class="fa-solid fa-shield-halved"></i>  
+  <br> ⚔️ All Rights Reserved | Alzaeem Tech ⚔️  
+</div>  <button class="voice-btn" onclick="playWelcome()">🔊 Play Welcome Voice</button>
+
+<script>  
+function toggleSidebar(){ document.getElementById("sidebar").classList.toggle("active"); }  
+function searchPage(){  
+  let input=document.getElementById("searchInput").value.toLowerCase();  
+  let links=document.querySelectorAll(".links a");  
+  for(let link of links){ if(link.innerText.toLowerCase().includes(input)){ window.location.href=link.href; return; } }  
+  alert("Page not found!");  
+}  
+  
+// تشغيل الصوت التلقائي مع موسيقى قصيرة  
+function playWelcome(){  
+  // موسيقى قصيرة (تجريبية باستخدام Audio)  
+  let music = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // ضع رابط mp3 قصير هنا  
+  music.volume = 0.2;  
+  music.play();  
+    
+  // بعد 3 ثواني تقريباً يبدأ الكلام  
+  setTimeout(()=>{  
+    let msg = new SpeechSynthesisUtterance("Welcome to Alzaeem Tech website!");  
+    msg.lang = "en-US";  
+    msg.rate = 1.2;  
+    msg.pitch = 1.1;  
+    window.speechSynthesis.speak(msg);  
+  },3000);  
+}  
+  
+window.onload = function(){ playWelcome(); }  
+</script>  </body>  
+</html>
