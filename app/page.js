@@ -1,135 +1,157 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 
-export default function Page() {
+export default function Home() {
   const canvasRef = useRef(null);
-  const [speed, setSpeed] = useState(100); // أقل رقم = أسرع حركة
+  const [direction, setDirection] = useState("RIGHT");
+  const [snake, setSnake] = useState([{ x: 10, y: 10 }]);
+  const [food, setFood] = useState({ x: 15, y: 15 });
   const [score, setScore] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
+  const [running, setRunning] = useState(false);
+
+  const box = 20;
+  const canvasSize = 20;
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvasRef.current.getContext("2d");
+    let gameInterval;
 
-    const box = 20;
-    let snake = [{ x: 9 * box, y: 10 * box }];
-    let food = {
-      x: Math.floor(Math.random() * 19 + 1) * box,
-      y: Math.floor(Math.random() * 19 + 1) * box,
-    };
-    let d;
-    let game;
-
-    document.addEventListener("keydown", direction);
-
-    function direction(event) {
-      if (event.key === "ArrowLeft" && d !== "RIGHT") d = "LEFT";
-      else if (event.key === "ArrowUp" && d !== "DOWN") d = "UP";
-      else if (event.key === "ArrowRight" && d !== "LEFT") d = "RIGHT";
-      else if (event.key === "ArrowDown" && d !== "UP") d = "DOWN";
-    }
-
-    function collision(head, array) {
-      return array.some(
-        (segment) => head.x === segment.x && head.y === segment.y
-      );
+    if (running && !gameOver) {
+      gameInterval = setInterval(draw, 120);
     }
 
     function draw() {
       ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, 400, 400);
+      ctx.fillRect(0, 0, box * canvasSize, box * canvasSize);
 
-      for (let i = 0; i < snake.length; i++) {
-        ctx.fillStyle = i === 0 ? "lime" : "white";
-        ctx.fillRect(snake[i].x, snake[i].y, box, box);
-
-        ctx.strokeStyle = "#111";
-        ctx.strokeRect(snake[i].x, snake[i].y, box, box);
-      }
-
+      // Draw food
       ctx.fillStyle = "red";
-      ctx.fillRect(food.x, food.y, box, box);
+      ctx.fillRect(food.x * box, food.y * box, box, box);
 
-      let snakeX = snake[0].x;
-      let snakeY = snake[0].y;
-
-      if (d === "LEFT") snakeX -= box;
-      if (d === "UP") snakeY -= box;
-      if (d === "RIGHT") snakeX += box;
-      if (d === "DOWN") snakeY += box;
-
-      if (snakeX === food.x && snakeY === food.y) {
-        setScore((prev) => prev + 10);
-        food = {
-          x: Math.floor(Math.random() * 19 + 1) * box,
-          y: Math.floor(Math.random() * 19 + 1) * box,
-        };
-      } else {
-        snake.pop();
+      // Draw snake
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = i === 0 ? "lime" : "green";
+        ctx.fillRect(snake[i].x * box, snake[i].y * box, box, box);
       }
 
-      const newHead = { x: snakeX, y: snakeY };
+      let newSnake = [...snake];
+      let head = { ...newSnake[0] };
 
+      if (direction === "LEFT") head.x -= 1;
+      if (direction === "UP") head.y -= 1;
+      if (direction === "RIGHT") head.x += 1;
+      if (direction === "DOWN") head.y += 1;
+
+      // Check walls
       if (
-        snakeX < 0 ||
-        snakeY < 0 ||
-        snakeX >= 400 ||
-        snakeY >= 400 ||
-        collision(newHead, snake)
+        head.x < 0 ||
+        head.y < 0 ||
+        head.x >= canvasSize ||
+        head.y >= canvasSize
       ) {
-        clearInterval(game);
-        alert("Game Over! Your score: " + score);
+        setGameOver(true);
+        setRunning(false);
+        return;
       }
 
-      snake.unshift(newHead);
+      // Check collision with self
+      for (let i = 1; i < newSnake.length; i++) {
+        if (head.x === newSnake[i].x && head.y === newSnake[i].y) {
+          setGameOver(true);
+          setRunning(false);
+          return;
+        }
+      }
+
+      newSnake.unshift(head);
+
+      // Eat food
+      if (head.x === food.x && head.y === food.y) {
+        setScore((s) => s + 100);
+        setFood({
+          x: Math.floor(Math.random() * canvasSize),
+          y: Math.floor(Math.random() * canvasSize),
+        });
+      } else {
+        newSnake.pop();
+      }
+
+      // Win condition
+      if (score >= 1000) {
+        setRunning(false);
+        setGameOver(true);
+        alert("🎉 Congratulations! You Win!");
+      }
+
+      setSnake(newSnake);
     }
 
-    game = setInterval(draw, speed);
-    return () => clearInterval(game);
-  }, [speed]);
+    return () => clearInterval(gameInterval);
+  }, [running, snake, direction, food, gameOver, score]);
+
+  const changeDirection = (dir) => {
+    if (!running) return;
+    if (dir === "LEFT" && direction !== "RIGHT") setDirection("LEFT");
+    if (dir === "UP" && direction !== "DOWN") setDirection("UP");
+    if (dir === "RIGHT" && direction !== "LEFT") setDirection("RIGHT");
+    if (dir === "DOWN" && direction !== "UP") setDirection("DOWN");
+  };
+
+  const handleStartPause = () => {
+    if (gameOver) {
+      setSnake([{ x: 10, y: 10 }]);
+      setFood({ x: 15, y: 15 });
+      setScore(0);
+      setGameOver(false);
+    }
+    setRunning(!running);
+  };
+
+  const shareScore = () => {
+    const text = `I scored ${score} points in Snake Game! 🐍🎮`;
+    if (navigator.share) {
+      navigator.share({ text });
+    } else {
+      alert(text);
+    }
+  };
 
   return (
-    <div style={{ textAlign: "center" }}>
+    <div
+      style={{
+        textAlign: "center",
+        backgroundColor: "#111",
+        color: "#fff",
+        height: "100vh",
+        padding: "20px",
+      }}
+    >
+      <h1>🐍 Snake Game</h1>
+      <p>Score: {score}</p>
       <canvas
         ref={canvasRef}
-        width={400}
-        height={400}
-        style={{
-          background: "#000",
-          border: "2px solid lime",
-          borderRadius: "10px",
-          marginTop: "20px",
-        }}
-      ></canvas>
-      <h3>Score: {score}</h3>
-
-      <div style={{ marginTop: "10px" }}>
-        <button
-          onClick={() => setSpeed((s) => Math.max(50, s - 20))}
-          style={{
-            padding: "10px 20px",
-            margin: "5px",
-            borderRadius: "6px",
-            background: "lime",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
-          ⚡ Faster
-        </button>
-        <button
-          onClick={() => setSpeed((s) => s + 20)}
-          style={{
-            padding: "10px 20px",
-            margin: "5px",
-            borderRadius: "6px",
-            background: "orange",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
-          🐢 Slower
-        </button>
+        width={box * canvasSize}
+        height={box * canvasSize}
+        style={{ border: "2px solid white", backgroundColor: "#000" }}
+      />
+      <div style={{ marginTop: 20 }}>
+        <button onClick={() => changeDirection("UP")}>⬆️</button>
+        <div>
+          <button onClick={() => changeDirection("LEFT")}>⬅️</button>
+          <button onClick={handleStartPause}>
+            {running ? "⏸ Pause" : "▶️ Start"}
+          </button>
+          <button onClick={() => changeDirection("RIGHT")}>➡️</button>
+        </div>
+        <button onClick={() => changeDirection("DOWN")}>⬇️</button>
       </div>
+
+      <div style={{ marginTop: 20 }}>
+        <button onClick={shareScore}>📤 Share Score</button>
+      </div>
+
+      {gameOver && !running && score < 1000 && <h2>💀 Game Over!</h2>}
     </div>
   );
 }
