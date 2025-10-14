@@ -11,6 +11,7 @@ export default function Home() {
   const [running, setRunning] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [level, setLevel] = useState(1);
+  const [speed, setSpeed] = useState(120); // السرعة الافتراضية
 
   const box = 20;
   const canvasSize = 20;
@@ -21,7 +22,6 @@ export default function Home() {
   const gameOverSound = useRef(null);
   const levelUpSound = useRef(null);
 
-  // إعداد الأصوات فقط على المتصفح
   useEffect(() => {
     eatSound.current = new Audio(
       "https://actions.google.com/sounds/v1/foley/metal_hit.ogg"
@@ -34,7 +34,7 @@ export default function Home() {
     );
   }, []);
 
-  // الحركة بالكيبورد
+  // تحكم بالكيبورد
   useEffect(() => {
     const handleKey = (e) => {
       if (!running) return;
@@ -79,28 +79,11 @@ export default function Home() {
       if (direction === "UP") head.y -= 1;
       if (direction === "DOWN") head.y += 1;
 
-      // جدار
-      if (
-        head.x < 0 ||
-        head.y < 0 ||
-        head.x >= canvasSize ||
-        head.y >= canvasSize
-      ) {
-        setGameOver(true);
-        setRunning(false);
-        if (gameOverSound.current) gameOverSound.current.play();
-        return;
-      }
-
-      // الاصطدام بالثعبان
-      for (let i = 1; i < newSnake.length; i++) {
-        if (head.x === newSnake[i].x && head.y === newSnake[i].y) {
-          setGameOver(true);
-          setRunning(false);
-          if (gameOverSound.current) gameOverSound.current.play();
-          return;
-        }
-      }
+      // التفاف عند الجدران (ثعبان يلتف حول الشاشة)
+      if (head.x < 0) head.x = canvasSize - 1;
+      if (head.x >= canvasSize) head.x = 0;
+      if (head.y < 0) head.y = canvasSize - 1;
+      if (head.y >= canvasSize) head.y = 0;
 
       newSnake.unshift(head);
 
@@ -116,6 +99,16 @@ export default function Home() {
         newSnake.pop();
       }
 
+      // الاصطدام بالذيل
+      for (let i = 1; i < newSnake.length; i++) {
+        if (head.x === newSnake[i].x && head.y === newSnake[i].y) {
+          setGameOver(true);
+          setRunning(false);
+          if (gameOverSound.current) gameOverSound.current.play();
+          break;
+        }
+      }
+
       setSnake(newSnake);
 
       // تغيير المستوى
@@ -123,10 +116,10 @@ export default function Home() {
         setLevel((l) => l + 1);
         if (levelUpSound.current) levelUpSound.current.play();
       }
-    }, Math.max(80 - level * 10, 30)); // سرعة حسب المستوى
+    }, speed);
 
     return () => clearInterval(interval);
-  }, [running, snake, direction, food, gameOver, score, level]);
+  }, [running, snake, direction, food, gameOver, score, level, speed]);
 
   const handleStartPause = () => {
     if (gameOver) {
@@ -136,6 +129,7 @@ export default function Home() {
       setDirection("RIGHT");
       setGameOver(false);
       setLevel(1);
+      setSpeed(120);
     }
     setRunning(!running);
   };
@@ -147,6 +141,9 @@ export default function Home() {
     if (dir === "UP" && direction !== "DOWN") setDirection("UP");
     if (dir === "DOWN" && direction !== "UP") setDirection("DOWN");
   };
+
+  const increaseSpeed = () => setSpeed((s) => Math.max(s - 20, 20));
+  const decreaseSpeed = () => setSpeed((s) => s + 20);
 
   return (
     <div
@@ -180,6 +177,7 @@ export default function Home() {
         </div>
         <button onClick={() => changeDirection("DOWN")}>⬇️</button>
       </div>
+
       <div style={{ marginTop: 10 }}>
         <label>🔍 تكبير/تصغير الأسهم: </label>
         <input
@@ -190,6 +188,12 @@ export default function Home() {
           value={buttonScale}
           onChange={(e) => setButtonScale(e.target.value)}
         />
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <button onClick={increaseSpeed}>⚡ زيادة السرعة</button>
+        <button onClick={decreaseSpeed}>🐢 تقليل السرعة</button>
+        <p>Current Speed: {speed} ms per move</p>
       </div>
 
       {gameOver && !running && <h2>💀 Game Over!</h2>}
