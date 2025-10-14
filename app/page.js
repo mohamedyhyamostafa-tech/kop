@@ -11,27 +11,31 @@ export default function Home() {
   const [running, setRunning] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [level, setLevel] = useState(1);
-  const [speed, setSpeed] = useState(120); // السرعة الافتراضية
+  const [speed, setSpeed] = useState(120);
+  const [buttonScale, setButtonScale] = useState(1.2);
 
   const box = 20;
   const canvasSize = 20;
-  const [buttonScale, setButtonScale] = useState(1.2);
 
-  // الأصوات
+  // أصوات مضمنة
   const eatSound = useRef(null);
   const gameOverSound = useRef(null);
   const levelUpSound = useRef(null);
 
   useEffect(() => {
-    eatSound.current = new Audio(
-      "https://actions.google.com/sounds/v1/foley/metal_hit.ogg"
-    );
-    gameOverSound.current = new Audio(
-      "https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"
-    );
-    levelUpSound.current = new Audio(
-      "https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"
-    );
+    // أصوات مضمنة باستخدام Audio Context
+    const ctx = new AudioContext();
+    const beep = (freq, duration = 0.1) => {
+      const osc = ctx.createOscillator();
+      osc.type = "square";
+      osc.frequency.value = freq;
+      osc.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    };
+    eatSound.current = () => beep(600);
+    gameOverSound.current = () => beep(200, 0.5);
+    levelUpSound.current = () => beep(1000, 0.2);
   }, []);
 
   // تحكم بالكيبورد
@@ -57,18 +61,40 @@ export default function Home() {
     const ctx = canvasRef.current.getContext("2d");
 
     const interval = setInterval(() => {
-      // رسم الخلفية
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, box * canvasSize, box * canvasSize);
+      // خلفية ديناميكية (شبكة متدرجة)
+      for (let i = 0; i < canvasSize; i++) {
+        for (let j = 0; j < canvasSize; j++) {
+          ctx.fillStyle = (i + j) % 2 === 0 ? "#111" : "#1a1a1a";
+          ctx.fillRect(i * box, j * box, box, box);
+        }
+      }
 
       // رسم الطعام
       ctx.fillStyle = "red";
-      ctx.fillRect(food.x * box, food.y * box, box, box);
+      ctx.beginPath();
+      ctx.arc(
+        food.x * box + box / 2,
+        food.y * box + box / 2,
+        box / 2 - 2,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
 
-      // رسم الثعبان
+      // رسم الثعبان بشكل جذاب
       snake.forEach((s, i) => {
-        ctx.fillStyle = i === 0 ? "lime" : "green";
-        ctx.fillRect(s.x * box, s.y * box, box, box);
+        const grad = ctx.createRadialGradient(
+          s.x * box + box / 2,
+          s.y * box + box / 2,
+          2,
+          s.x * box + box / 2,
+          s.y * box + box / 2,
+          box / 2
+        );
+        grad.addColorStop(0, i === 0 ? "#00ff00" : "#0a7f00");
+        grad.addColorStop(1, "#004400");
+        ctx.fillStyle = grad;
+        ctx.fillRect(s.x * box + 2, s.y * box + 2, box - 4, box - 4);
       });
 
       let newSnake = [...snake];
@@ -79,7 +105,7 @@ export default function Home() {
       if (direction === "UP") head.y -= 1;
       if (direction === "DOWN") head.y += 1;
 
-      // التفاف عند الجدران (ثعبان يلتف حول الشاشة)
+      // التفاف حول الشاشة
       if (head.x < 0) head.x = canvasSize - 1;
       if (head.x >= canvasSize) head.x = 0;
       if (head.y < 0) head.y = canvasSize - 1;
@@ -90,7 +116,7 @@ export default function Home() {
       // أكل الطعام
       if (head.x === food.x && head.y === food.y) {
         setScore((s) => s + 100);
-        if (eatSound.current) eatSound.current.play();
+        if (eatSound.current) eatSound.current();
         setFood({
           x: Math.floor(Math.random() * canvasSize),
           y: Math.floor(Math.random() * canvasSize),
@@ -99,12 +125,12 @@ export default function Home() {
         newSnake.pop();
       }
 
-      // الاصطدام بالذيل
+      // الاصطدام بالذيل فقط
       for (let i = 1; i < newSnake.length; i++) {
         if (head.x === newSnake[i].x && head.y === newSnake[i].y) {
           setGameOver(true);
           setRunning(false);
-          if (gameOverSound.current) gameOverSound.current.play();
+          if (gameOverSound.current) gameOverSound.current();
           break;
         }
       }
@@ -114,7 +140,7 @@ export default function Home() {
       // تغيير المستوى
       if (score >= level * 500) {
         setLevel((l) => l + 1);
-        if (levelUpSound.current) levelUpSound.current.play();
+        if (levelUpSound.current) levelUpSound.current();
       }
     }, speed);
 
@@ -153,6 +179,7 @@ export default function Home() {
         color: "#fff",
         height: "100vh",
         padding: "20px",
+        fontFamily: "Arial, sans-serif",
       }}
     >
       <h1>🐍 Snake Game - Level {level}</h1>
@@ -164,6 +191,7 @@ export default function Home() {
         style={{
           border: "2px solid white",
           backgroundColor: "#000",
+          marginBottom: "20px",
         }}
       />
       <div style={{ marginTop: 20, transform: `scale(${buttonScale})` }}>
