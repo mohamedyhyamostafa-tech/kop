@@ -3,60 +3,120 @@ import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
   const canvasRef = useRef(null);
-  const [direction, setDirection] = useState("RIGHT");
   const [snake, setSnake] = useState([{ x: 10, y: 10 }]);
   const [food, setFood] = useState({ x: 15, y: 15 });
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [running, setRunning] = useState(false);
+  const [nextDirection, setNextDirection] = useState("RIGHT");
+  const [currentDirection, setCurrentDirection] = useState("RIGHT");
 
   const box = 20;
   const canvasSize = 20;
+  const speed = 100;
 
+  // ==========================================
+  // تغيير الاتجاه مع منع الرجوع للخلف
+  const changeDirection = (dir) => {
+    const opposites = { LEFT: "RIGHT", RIGHT: "LEFT", UP: "DOWN", DOWN: "UP" };
+    if (dir !== opposites[currentDirection]) setNextDirection(dir);
+  };
+
+  // ==========================================
+  // لوحة المفاتيح (Arrow + WASD)
   useEffect(() => {
-    const ctx = canvasRef.current.getContext("2d");
-    let gameInterval;
-
-    if (running && !gameOver) {
-      gameInterval = setInterval(draw, 120);
-    }
-
-    function draw() {
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, box * canvasSize, box * canvasSize);
-
-      // Draw food
-      ctx.fillStyle = "red";
-      ctx.fillRect(food.x * box, food.y * box, box, box);
-
-      // Draw snake
-      for (let i = 0; i < snake.length; i++) {
-        ctx.fillStyle = i === 0 ? "lime" : "green";
-        ctx.fillRect(snake[i].x * box, snake[i].y * box, box, box);
+    const handleKey = (e) => {
+      switch (e.key) {
+        case "ArrowUp":
+        case "w":
+        case "W":
+          changeDirection("UP");
+          break;
+        case "ArrowDown":
+        case "s":
+        case "S":
+          changeDirection("DOWN");
+          break;
+        case "ArrowLeft":
+        case "a":
+        case "A":
+          changeDirection("LEFT");
+          break;
+        case "ArrowRight":
+        case "d":
+        case "D":
+          changeDirection("RIGHT");
+          break;
       }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [currentDirection]);
+
+  // ==========================================
+  // التحكم باللمس (Swipe)
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const handleTouchStart = (e) => {
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    };
+
+    const handleTouchMove = (e) => {
+      if (!running) return;
+      const t = e.touches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) changeDirection("RIGHT");
+        else changeDirection("LEFT");
+      } else {
+        if (dy > 0) changeDirection("DOWN");
+        else changeDirection("UP");
+      }
+
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    };
+
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchmove", handleTouchMove);
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+    };
+  }, [currentDirection, running]);
+
+  // ==========================================
+  // اللعبة
+  useEffect(() => {
+    if (!running || gameOver) return;
+    const ctx = canvasRef.current.getContext("2d");
+
+    const gameLoop = setInterval(() => {
+      setCurrentDirection(nextDirection);
 
       let newSnake = [...snake];
       let head = { ...newSnake[0] };
 
-      if (direction === "LEFT") head.x -= 1;
-      if (direction === "UP") head.y -= 1;
-      if (direction === "RIGHT") head.x += 1;
-      if (direction === "DOWN") head.y += 1;
+      if (nextDirection === "LEFT") head.x -= 1;
+      if (nextDirection === "RIGHT") head.x += 1;
+      if (nextDirection === "UP") head.y -= 1;
+      if (nextDirection === "DOWN") head.y += 1;
 
-      // Check walls
-      if (
-        head.x < 0 ||
-        head.y < 0 ||
-        head.x >= canvasSize ||
-        head.y >= canvasSize
-      ) {
-        setGameOver(true);
-        setRunning(false);
-        return;
-      }
+      // التفاف الحائط
+      if (head.x < 0) head.x = canvasSize - 1;
+      if (head.x >= canvasSize) head.x = 0;
+      if (head.y < 0) head.y = canvasSize - 1;
+      if (head.y >= canvasSize) head.y = 0;
 
-      // Check collision with self
-      for (let i = 1; i < newSnake.length; i++) {
+      // الاصطدام بالنفس
+      for (let i = 0; i < newSnake.length; i++) {
         if (head.x === newSnake[i].x && head.y === newSnake[i].y) {
           setGameOver(true);
           setRunning(false);
@@ -66,7 +126,7 @@ export default function Home() {
 
       newSnake.unshift(head);
 
-      // Eat food
+      // أكل الطعام
       if (head.x === food.x && head.y === food.y) {
         setScore((s) => s + 100);
         setFood({
@@ -77,33 +137,33 @@ export default function Home() {
         newSnake.pop();
       }
 
-      // Win condition
-      if (score >= 1000) {
-        setRunning(false);
-        setGameOver(true);
-        alert("🎉 Congratulations! You Win!");
-      }
-
       setSnake(newSnake);
-    }
 
-    return () => clearInterval(gameInterval);
-  }, [running, snake, direction, food, gameOver, score]);
+      // رسم الكانفس
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, box * canvasSize, box * canvasSize);
 
-  const changeDirection = (dir) => {
-    if (!running) return;
-    if (dir === "LEFT" && direction !== "RIGHT") setDirection("LEFT");
-    if (dir === "UP" && direction !== "DOWN") setDirection("UP");
-    if (dir === "RIGHT" && direction !== "LEFT") setDirection("RIGHT");
-    if (dir === "DOWN" && direction !== "UP") setDirection("DOWN");
-  };
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x * box, food.y * box, box, box);
 
+      newSnake.forEach((segment, i) => {
+        ctx.fillStyle = i === 0 ? "lime" : "green";
+        ctx.fillRect(segment.x * box, segment.y * box, box, box);
+      });
+    }, speed);
+
+    return () => clearInterval(gameLoop);
+  }, [running, snake, nextDirection, food, gameOver]);
+
+  // ==========================================
   const handleStartPause = () => {
     if (gameOver) {
       setSnake([{ x: 10, y: 10 }]);
       setFood({ x: 15, y: 15 });
       setScore(0);
       setGameOver(false);
+      setNextDirection("RIGHT");
+      setCurrentDirection("RIGHT");
     }
     setRunning(!running);
   };
@@ -125,6 +185,8 @@ export default function Home() {
         color: "#fff",
         height: "100vh",
         padding: "20px",
+        userSelect: "none",
+        touchAction: "none",
       }}
     >
       <h1>🐍 Snake Game</h1>
@@ -151,7 +213,7 @@ export default function Home() {
         <button onClick={shareScore}>📤 Share Score</button>
       </div>
 
-      {gameOver && !running && score < 1000 && <h2>💀 Game Over!</h2>}
+      {gameOver && !running && <h2>💀 Game Over!</h2>}
     </div>
   );
 }
